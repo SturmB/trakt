@@ -357,6 +357,9 @@ def main():
         parser.add_argument('-r', '--rated_at',
                       help='import rated_at date from CSV, it\'s must be UTC datetime, default %(default)s',
                       default=False, action='store_true', dest='rated_at')
+        parser.add_argument('-o', '--collected_at',
+                      help='Import collected_at date from CSV; it must be in UTC datetime format. Defaults to %(default)s',
+                      default=False, action='store_true', dest='collected_at')
         parser.add_argument('-f', '--format',
                       help='allow to overwrite default ID type format, default %(default)s',
                       choices=['imdb', 'tmdb', 'tvdb', 'tvrage', 'trakt'], dest='format', default='imdb')
@@ -470,6 +473,8 @@ def main():
                         data.append({'ids':{options.format : myid[options.format]},"watched_at": myid["watched_at"]})
                     elif (options.type == "movies" or options.type == "shows") and options.list == 'ratings' and options.rated_at:
                         data.append({'ids':{options.format : myid[options.format]}, "rated_at": myid["rated_at"], "rating": myid["rating"]})
+                    elif (options.type == "movies" or options.type == "shows") and options.list == 'collection' and options.collected_at:
+                        data.append({'ids':{options.format : myid[options.format]}, "collected_at": myid["collected_at"]})
                     else:
                         data.append({'ids':{options.format : myid[options.format]}})
                     # Import batch of 10 IDs
