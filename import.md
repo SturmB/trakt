@@ -2,7 +2,7 @@
 
 ## Purpose
 
- * Import Movies or TVShows IDs from CSV file format into Trakt.tv.
+ * Import Movies or TVShows IDs from CSV file format into Trakt.tv, optionally with a specific date and time.
  * Import Ratings of Movies or TVShows IDs from CSV file format into Trakt.tv.
 
 ## Requirements
@@ -41,6 +41,7 @@ optional arguments:
                         datetime, default False
   -r, --rated_at        import rated_at date from CSV, it's must be UTC
                         datetime, default False
+  -o, --collected_at    Import collected_at date from CSV; it must be in UTC datetime format. Defaults to False
   -f {imdb,tmdb,tvdb,tvrage,trakt}, --format {imdb,tmdb,tvdb,tvrage,trakt}
                         allow to overwrite default ID type format, default
                         imdb
@@ -69,6 +70,14 @@ Import all movies with imdb id from file ``movies_favorites.csv`` into watchlist
 Import all tvshows with imdb id from file ``tvshows_favorites.csv`` into watchlist:
 
 	$ ./import_trakt.py -c config.ini -f imdb -i  tvshows_favorites.csv -l watchlist -t shows
+
+Import all movies with imdb id from file ``movies.csv`` into your collection with collected_at date in CSV:
+
+    $ ./import_trakt.py -c config.ini -f imdb -i movies.csv -l collection -t movies -o
+
+Import all TV shows with tvdb id from file ``shows.csv`` into your collection with collected_at date in CSV:
+
+    $ ./import_trakt.py -c config.ini -f tvdb -i shows.csv -l collection -t shows -o
 
 Import all movies with imdb id from file ``movies_views.csv`` into history and mark as seen:
 
