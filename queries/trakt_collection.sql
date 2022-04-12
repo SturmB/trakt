@@ -9,6 +9,7 @@ SELECT
         WHEN '384' THEN 'uhd_4k'
         WHEN '192' THEN 'hd_1080p'
         WHEN '142' THEN 'hd_1080p'
+        WHEN '128' THEN 'hd_720p'
         WHEN '640' THEN 'sd_480p'
         WHEN '576' THEN 'sd_480p'
         ELSE ''
@@ -17,18 +18,25 @@ SELECT
         WHEN '1' THEN 'hdr10'
         ELSE ''
     END AS 'hdr',
-    CASE ms.codec
+    CASE ms2.codec
         WHEN 'ac3' THEN 'dolby_digital'
         WHEN 'eac3' THEN 'dolby_digital_plus'
         WHEN 'truehd' THEN
-            CASE SUBSTR(ms.extra_data, INSTR(ms.extra_data, 'title=') + 6, 25)
+            CASE SUBSTR(ms2.extra_data, INSTR(ms2.extra_data, 'title=') + 6, 25)
                 WHEN 'TrueHD%20Atmos%207%2E1' THEN 'dolby_atmos'
                 ELSE 'dolby_truehd'
             END
         WHEN 'dca' THEN
-            CASE SUBSTR(ms.extra_data, INSTR(ms.extra_data, 'title=') + 6, 25)
+            CASE SUBSTR(ms2.extra_data, INSTR(ms2.extra_data, 'title=') + 6, 25)
                 WHEN 'DTS%206%2E1' THEN 'dts'
                 WHEN 'DTS-HD%20MA%205%2E1' THEN 'dts_ma'
+                ELSE
+                    CASE
+                        WHEN SUBSTR(ms2.extra_data, INSTR(ms2.extra_data, 'profile=') + 8, 25)
+                            LIKE 'dts%' THEN 'dts'
+                        WHEN SUBSTR(ms2.extra_data, INSTR(ms2.extra_data, 'profile=') + 8, 25)
+                            LIKE 'ma%' THEN 'dts_ma'
+                    END
             END
         WHEN 'mp3' THEN 'mp3'
         WHEN 'aac' THEN 'aac'
@@ -36,25 +44,31 @@ SELECT
         ELSE ''
     END AS 'audio',
     CASE
-        WHEN SUBSTR(ms.extra_data, INSTR(ms.extra_data, 'audioChannelLayout=') + 19, 6) LIKE '%7\%2E1%' ESCAPE '\' THEN '7.1'
-        WHEN SUBSTR(ms.extra_data, INSTR(ms.extra_data, 'audioChannelLayout=') + 19, 6) LIKE '%6\%2E1%' ESCAPE '\' THEN '6.1'
-        WHEN SUBSTR(ms.extra_data, INSTR(ms.extra_data, 'audioChannelLayout=') + 19, 15) LIKE '%5\%2E1(side)%' ESCAPE '\' THEN '4.1'
-        WHEN SUBSTR(ms.extra_data, INSTR(ms.extra_data, 'audioChannelLayout=') + 19, 6) LIKE '%5\%2E1%' ESCAPE '\' THEN '5.1'
-        WHEN SUBSTR(ms.extra_data, INSTR(ms.extra_data, 'audioChannelLayout=') + 19, 15) LIKE '%5\%2E0%' ESCAPE '\' THEN '5.0'
-        WHEN SUBSTR(ms.extra_data, INSTR(ms.extra_data, 'audioChannelLayout=') + 19, 6) LIKE '%4\%2E0%' ESCAPE '\' THEN '4.0'
-        WHEN SUBSTR(ms.extra_data, INSTR(ms.extra_data, 'audioChannelLayout=') + 19, 6) LIKE '%stereo%' THEN '2.0'
-        WHEN SUBSTR(ms.extra_data, INSTR(ms.extra_data, 'audioChannelLayout=') + 19, 6) LIKE '%mono%' THEN '1.0'
+        WHEN SUBSTR(ms2.extra_data, INSTR(ms2.extra_data, 'audioChannelLayout=') + 19, 6) LIKE '%7\%2E1%' ESCAPE '\' THEN '7.1'
+        WHEN SUBSTR(ms2.extra_data, INSTR(ms2.extra_data, 'audioChannelLayout=') + 19, 6) LIKE '%6\%2E1%' ESCAPE '\' THEN '6.1'
+        WHEN SUBSTR(ms2.extra_data, INSTR(ms2.extra_data, 'audioChannelLayout=') + 19, 15) LIKE '%5\%2E1(side)%' ESCAPE '\' THEN '4.1'
+        WHEN SUBSTR(ms2.extra_data, INSTR(ms2.extra_data, 'audioChannelLayout=') + 19, 6) LIKE '%5\%2E1%' ESCAPE '\' THEN '5.1'
+        WHEN SUBSTR(ms2.extra_data, INSTR(ms2.extra_data, 'audioChannelLayout=') + 19, 15) LIKE '%5\%2E0%' ESCAPE '\' THEN '5.0'
+        WHEN SUBSTR(ms2.extra_data, INSTR(ms2.extra_data, 'audioChannelLayout=') + 19, 6) LIKE '%4\%2E0%' ESCAPE '\' THEN '4.0'
+        WHEN SUBSTR(ms2.extra_data, INSTR(ms2.extra_data, 'audioChannelLayout=') + 19, 6) LIKE '%stereo%' THEN '2.0'
+        WHEN SUBSTR(ms2.extra_data, INSTR(ms2.extra_data, 'audioChannelLayout=') + 19, 6) LIKE '%mono%' THEN '1.0'
         ELSE '2.0'
     END AS 'audio_channels',
     'false' AS '3d'
 FROM metadata_items mdi
 JOIN media_items mi on mdi.id = mi.metadata_item_id
-JOIN media_parts mp on mi.id = mp.media_item_id
+-- JOIN media_parts mp on mi.id = mp.media_item_id
 JOIN media_streams ms on mi.id = ms.media_item_id
+JOIN media_streams ms2 on mi.id = ms2.media_item_id
 WHERE mdi.library_section_id = 1
   AND mdi.metadata_type = 1
-  AND mdi.title LIKE '%nature%'
+  AND ms.stream_type_id = 1
+  AND ms2.stream_type_id = 2
+--   AND mdi.title LIKE '%nature%'
 --     AND mdi.guid LIKE '%tt0111282%';
+
+--Arrival - audio - 7.1
+--ma%3AaudioChannelLayout=7%2E1&ma%3AbitDepth=16&ma%3Aprofile=ma&ma%3ArequiredBandwidths=2671%2C2671%2C2671%2C2671%2C2671%2C2671%2C2671%2C2671&ma%3AsamplingRate=48000&ma%3Atitle=DTS-HD%20Master%20Audio%20%2F%207%2E1%20%2F%2048%20kHz%20%2F%202525%20kbps%20%2F%2016-bit
 
 --When Nature Calls - audio - 5.0
 --ma%3AaudioChannelLayout=5%2E0%28side%29&ma%3AbitDepth=24&ma%3Aprofile=dts&ma%3ArequiredBandwidths=1508%2C1508%2C1508%2C1508%2C1508%2C1508%2C1508%2C1508&ma%3AsamplingRate=48000&ma%3Atitle=Ace%2EVentura%2EWhen%2ENature%2ECalls%2E1995%2E1080p%2EDTS%2Ex264-CHD
