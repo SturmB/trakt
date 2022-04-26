@@ -364,6 +364,21 @@ def main():
                       help='Allows overriding media_type. Defaults to %(default)s',
                       choices=['digital', 'bluray', 'hddvd', 'dvd', 'vcd', 'vhs', 'betamax', 'laserdisc'],
                       default='digital', dest='media_type')
+        parser.add_argument('-e', '--resolution',
+                      help='Import resolution from CSV. Defaults to %(default)s',
+                      default=False, action='store_true', dest='resolution')
+        parser.add_argument('-d', '--hdr',
+                      help='Import hdr info from CSV. Defaults to %(default)s',
+                      default=False, action='store_true', dest='hdr')
+        parser.add_argument('-a', '--audio',
+                      help='Import audio codec from CSV. Defaults to %(default)s',
+                      default=False, action='store_true', dest='audio')
+        parser.add_argument('-n', '--audio_channels',
+                      help='Import audio channel info from CSV. Defaults to %(default)s',
+                      default=False, action='store_true', dest='audio_channels')
+        parser.add_argument('-3', '--3d',
+                      help='Import 3d info from CSV. Defaults to %(default)s',
+                      default=False, action='store_true', dest='three_d')
         parser.add_argument('-f', '--format',
                       help='allow to overwrite default ID type format, default %(default)s',
                       choices=['imdb', 'tmdb', 'tvdb', 'tvrage', 'trakt'], dest='format', default='imdb')
@@ -468,21 +483,31 @@ def main():
                     if not options.format == "imdb" and not myid[options.format].startswith('tt'):
                         myid[options.format] = int(myid[options.format])
 
-                    this_item = {'ids': {options.format: myid[options.format]}}
+                    this_item = {"ids": {options.format: myid[options.format]}}
                     if options.seen:
                         this_item["watched_at"] = options.seen
                     elif options.watched_at:
                         this_item["watched_at"] = myid["watched_at"]
 
-                    if options.list == 'ratings' and options.rated_at:
+                    if options.list == "ratings" and options.rated_at:
                         this_item["rated_at"] = myid["rated_at"]
                         this_item["rating"] = myid["rating"]
 
-                    if options.list == 'collection' and options.collected_at:
-                        this_item["collected_at"] = myid["collected_at"]
-
-                    if options.list == 'collection' and options.media_type:
-                        this_item['media_type'] = options.media_type
+                    if options.list == "collection":
+                        if options.collected_at:
+                            this_item["collected_at"] = myid["collected_at"]
+                        if options.media_type:
+                            this_item["media_type"] = options.media_type
+                        if options.resolution:
+                            this_item["resolution"] = myid["resolution"]
+                        if options.hdr:
+                            this_item["hdr"] = myid["hdr"]
+                        if options.audio:
+                            this_item["audio"] = myid["audio"]
+                        if options.audio_channels:
+                            this_item["audio_channels"] = myid["audio_channels"]
+                        if options.three_d:
+                            this_item["3d"] = myid["3d"]
 
                     data.append(this_item)
                     # Import batch of 10 IDs
@@ -501,8 +526,8 @@ def main():
                         data = []
             # Import the rest
             if len(data) > 0:
-                pp.pprint(data)
-                sys.exit()
+#                 pp.pprint(data)
+#                 sys.exit()
                 results['sentids'] += len(data)
                 result = api_add_to_list(options, data)
                 if result:
