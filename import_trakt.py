@@ -360,6 +360,10 @@ def main():
         parser.add_argument('-o', '--collected_at',
                       help='Import collected_at date from CSV; it must be in UTC datetime format. Defaults to %(default)s',
                       default=False, action='store_true', dest='collected_at')
+        parser.add_argument('-m', '--media_type',
+                      help='Allows overriding media_type. Defaults to %(default)s',
+                      choices=['digital', 'bluray', 'hddvd', 'dvd', 'vcd', 'vhs', 'betamax', 'laserdisc'],
+                      default='digital', dest='media_type')
         parser.add_argument('-f', '--format',
                       help='allow to overwrite default ID type format, default %(default)s',
                       choices=['imdb', 'tmdb', 'tvdb', 'tvrage', 'trakt'], dest='format', default='imdb')
@@ -463,20 +467,24 @@ def main():
                     # If format is not "imdb" it must be cast to an integer
                     if not options.format == "imdb" and not myid[options.format].startswith('tt'):
                         myid[options.format] = int(myid[options.format])
-                    if (options.type == "movies" or options.type == "shows") and options.seen:
-                        data.append({'ids':{options.format : myid[options.format]}, "watched_at": options.seen})
-                    elif (options.type == "movies" or options.type == "shows") and options.watched_at:
-                        data.append({'ids':{options.format : myid[options.format]}, "watched_at": myid["watched_at"]})
-                    elif options.type == "episodes" and options.seen:
-                        data.append({'ids':{options.format : myid[options.format]},"watched_at": options.seen})
-                    elif options.type == "episodes" and options.watched_at:
-                        data.append({'ids':{options.format : myid[options.format]},"watched_at": myid["watched_at"]})
-                    elif (options.type == "movies" or options.type == "shows") and options.list == 'ratings' and options.rated_at:
-                        data.append({'ids':{options.format : myid[options.format]}, "rated_at": myid["rated_at"], "rating": myid["rating"]})
-                    elif (options.type == "movies" or options.type == "shows") and options.list == 'collection' and options.collected_at:
-                        data.append({'ids':{options.format : myid[options.format]}, "collected_at": myid["collected_at"]})
-                    else:
-                        data.append({'ids':{options.format : myid[options.format]}})
+
+                    this_item = {'ids': {options.format: myid[options.format]}}
+                    if options.seen:
+                        this_item["watched_at"] = options.seen
+                    elif options.watched_at:
+                        this_item["watched_at"] = myid["watched_at"]
+
+                    if options.list == 'ratings' and options.rated_at:
+                        this_item["rated_at"] = myid["rated_at"]
+                        this_item["rating"] = myid["rating"]
+
+                    if options.list == 'collection' and options.collected_at:
+                        this_item["collected_at"] = myid["collected_at"]
+
+                    if options.list == 'collection' and options.media_type:
+                        this_item['media_type'] = options.media_type
+
+                    data.append(this_item)
                     # Import batch of 10 IDs
                     if len(data) >= 10:
                         #pp.pprint(json.dumps(data))
@@ -493,7 +501,8 @@ def main():
                         data = []
             # Import the rest
             if len(data) > 0:
-                #pp.pprint(data)
+                pp.pprint(data)
+                sys.exit()
                 results['sentids'] += len(data)
                 result = api_add_to_list(options, data)
                 if result:
