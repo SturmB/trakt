@@ -3,4 +3,5 @@ FROM metadata_items mi
 JOIN metadata_items mip ON mip.id = mi.parent_id
 JOIN metadata_items mig ON mig.id = mip.parent_id
 JOIN media_items m on mi.id = m.metadata_item_id
-WHERE mi.library_section_id = 2;
+WHERE mi.library_section_id = 2
+-- AND mi.title LIKE '%partial_episode_title%';

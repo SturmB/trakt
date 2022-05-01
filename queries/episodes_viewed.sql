@@ -1,6 +1,6 @@
 SELECT substr('JanFebMarAprMayJunJulAugSepOctNovDec', 1 + 3*strftime('%m', miv.viewed_at, 'localtime'), -3) || ' ' || strftime('%d, %Y, %H:%M', miv.viewed_at, 'localtime') AS vdatetime,
         substr('JanFebMarAprMayJunJulAugSepOctNovDec', 1 + 3*strftime('%m', mi.added_at, 'localtime'), -3) || ' ' || strftime('%d, %Y, %H:%M', mi.added_at, 'localtime') AS adatetime,
-        miv.title,
+        mi.title,
         miv.grandparent_title,
         mi.year
 --         miv.parent_title,
